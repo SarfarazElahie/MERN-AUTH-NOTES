@@ -1,4 +1,5 @@
 import express from "express";
+import authRoutes from "./routes/auth.routes.js";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 
@@ -23,6 +24,10 @@ app.use(express.urlencoded({ extended: true })); // parse form bodies
 // ── Cookie parser ────────────────────────────────────
 // Lets us read cookies via req.cookies (needed for refresh token)
 app.use(cookieParser());
+
+
+//Auth routes 
+app.use("/api/auth", authRoutes);
 
 // ── Health check route ───────────────────────────────
 app.get("/", (req, res) => {
