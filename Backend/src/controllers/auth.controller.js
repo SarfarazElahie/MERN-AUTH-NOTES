@@ -162,11 +162,11 @@ export const refreshAccessToken = async (req, res, next) => {
     try {
       decoded = verifyRefreshToken(refreshToken);
     } catch (err) {
-    console.log("❌ Refresh verify error:", err.name, "-", err.message);
     return res.status(401).json({
     success: false,
     message: "Invalid or expired refresh token",
   });
+     return next(err);
     }
 
     // 3. Hash it and find matching session in DB
@@ -252,7 +252,7 @@ export const logoutUser = async (req, res, next) => {
 export const logoutAll = async (req, res, next) => {
   try {
     // 1. Delete every session belonging to this user
-    await Session.deleteMany({ userId: req.userId });
+    await Session.deleteMany({ userId: req.user._id });
 
     // 2. Clear the refresh cookie on THIS device too
     clearRefreshTokenCookie(res);
@@ -275,24 +275,14 @@ export const logoutAll = async (req, res, next) => {
  */
 export const getMe = async (req, res, next) => {
   try {
-    // 1. Find user by ID from access token
-    const user = await User.findById(req.userId);
-
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-    }
-
-    // 2. Return only safe fields
+    // Already fetched by middleware — just return it
     return res.status(200).json({
       success: true,
       user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        createdAt: user.createdAt,
+        id: req.user._id,
+        name: req.user.name,
+        email: req.user.email,
+        createdAt: req.user.createdAt,
       },
     });
   } catch (error) {
