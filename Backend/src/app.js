@@ -2,8 +2,8 @@ import express from "express";
 import authRoutes from "./routes/auth.routes.js";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-
 import config from "./config/config.js";
+import notesRoutes from "./routes/notes.routes.js";
 
 const app = express();
 
@@ -28,6 +28,9 @@ app.use(cookieParser());
 
 //Auth routes 
 app.use("/api/auth", authRoutes);
+
+//Notes routes 
+app.use("/api/notes", notesRoutes);
 
 // ── Health check route ───────────────────────────────
 app.get("/", (req, res) => {
