@@ -10,9 +10,24 @@ const app = express();
 // ── CORS ─────────────────────────────────────────────
 // Allow requests only from the frontend origin
 // credentials: true → allows cookies (refresh token) to be sent
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://mern-auth-notes.vercel.app",
+  "https://mern-auth-notes-git-main-sarfarazelahies-projects.vercel.app",
+  "https://mern-auth-notes-aqnkle64h-sarfarazelahies-projects.vercel.app",
+  config.CLIENT_URL,   // keep whatever is in the env var
+].filter(Boolean);
+
 app.use(
   cors({
-    origin: config.CLIENT_URL,
+    origin: (origin, callback) => {
+      // allow requests with no origin (Postman, curl, mobile apps)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error(`CORS blocked for origin: ${origin}`));
+    },
     credentials: true,
   })
 );
