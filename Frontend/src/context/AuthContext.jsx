@@ -1,8 +1,8 @@
 import { createContext, useContext, useEffect, useState } from "react";
+import api, { registerAuthHandlers } from "../services/api";
 import * as authService from "../services/auth";
 
 const AuthContext = createContext();
-
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
@@ -10,16 +10,28 @@ export const AuthProvider = ({ children }) => {
   const [accessToken, setAccessToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // On app load → try silent login using the refresh cookie
+  // 🔗 Wire interceptor → context
+  useEffect(() => {
+    registerAuthHandlers({
+      get: () => accessToken,
+      set: (t) => setAccessToken(t),
+      onFail: () => {
+        setUser(null);
+        setAccessToken(null);
+      },
+    });
+  }, [accessToken]);
+
+  // 🔄 Initial silent login (uses refresh cookie)
   useEffect(() => {
     const init = async () => {
       try {
-        const refreshRes = await authService.refreshAccessToken();
+        const refreshRes = await api.post("/auth/refresh");
         const token = refreshRes.data.accessToken;
-
-        const meRes = await authService.getMe(token);
-        setUser(meRes.data.user);
         setAccessToken(token);
+
+        const meRes = await api.get("/auth/me");
+        setUser(meRes.data.user);
       } catch {
         setUser(null);
         setAccessToken(null);
@@ -53,7 +65,7 @@ export const AuthProvider = ({ children }) => {
 
   const logoutAll = async () => {
     try {
-      await authService.logoutAllUser(accessToken);
+      await api.post("/auth/logout-all");
     } finally {
       setUser(null);
       setAccessToken(null);
@@ -73,39 +85,26 @@ export const AuthProvider = ({ children }) => {
   };
 
   const getMe = async () => {
-    const res = await authService.getMe(accessToken);
+    const res = await api.get("/auth/me");
     setUser(res.data.user);
     return res.data.user;
   };
 
-  /**
-   * Runs an authenticated API call.
-   * If it returns 401, tries /refresh once and retries.
-   */
-  const secureRequest = async (apiFn) => {
-    try {
-      return await apiFn(accessToken);
-    } catch (err) {
-      if (err.response?.status === 401) {
-        const newToken = await refresh();
-        if (newToken) return apiFn(newToken);
-      }
-      throw err;
-    }
-  };
-
-  const value = {
-    user,
-    accessToken,
-    loading,
-    register,
-    login,
-    logout,
-    logoutAll,
-    refresh,
-    getMe,
-    secureRequest,
-  };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        accessToken,
+        loading,
+        register,
+        login,
+        logout,
+        logoutAll,
+        refresh,
+        getMe,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 };

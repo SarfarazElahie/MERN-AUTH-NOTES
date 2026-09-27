@@ -6,20 +6,17 @@ import NoteCard from "../components/NoteCard";
 import NoteForm from "../components/NoteForm";
 
 const Notes = () => {
-  const { user, secureRequest } = useAuth();
-
+  const { user } = useAuth();
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingNote, setEditingNote] = useState(null);
 
   const loadNotes = async () => {
     setLoading(true);
-    setError("");
     try {
-      const res = await secureRequest((token) => notesService.getNotes(token));
+      const res = await notesService.getNotes();
       setNotes(res.data.notes);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to load notes");
@@ -34,46 +31,30 @@ const Notes = () => {
   }, []);
 
   const handleCreate = async (data) => {
-    try {
-      const res = await secureRequest((token) =>
-        notesService.createNote(data, token)
-      );
-      setNotes((prev) => [res.data.note, ...prev]);
-      setShowCreateForm(false);
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to create note");
-    }
+    const res = await notesService.createNote(data);
+    setNotes((prev) => [res.data.note, ...prev]);
+    setShowCreateForm(false);
   };
 
   const handleUpdate = async (data) => {
-    try {
-      const res = await secureRequest((token) =>
-        notesService.updateNote(editingNote._id, data, token)
-      );
-      setNotes((prev) =>
-        prev.map((n) => (n._id === editingNote._id ? res.data.note : n))
-      );
-      setEditingNote(null);
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to update note");
-    }
+    const res = await notesService.updateNote(editingNote._id, data);
+    setNotes((prev) =>
+      prev.map((n) => (n._id === editingNote._id ? res.data.note : n))
+    );
+    setEditingNote(null);
   };
 
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this note?")) return;
-    try {
-      await secureRequest((token) => notesService.deleteNote(id, token));
-      setNotes((prev) => prev.filter((n) => n._id !== id));
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to delete note");
-    }
+    await notesService.deleteNote(id);
+    setNotes((prev) => prev.filter((n) => n._id !== id));
   };
 
   return (
     <div className="notes-page">
       <header className="notes-header">
         <h1>Draftly</h1>
-        <div className="notes-header__user">
+        <div>
           <span>Hi, {user?.name}</span>
           <Link to="/profile">Profile</Link>
         </div>
@@ -86,10 +67,7 @@ const Notes = () => {
       )}
 
       {showCreateForm && (
-        <NoteForm
-          onSave={handleCreate}
-          onCancel={() => setShowCreateForm(false)}
-        />
+        <NoteForm onSave={handleCreate} onCancel={() => setShowCreateForm(false)} />
       )}
 
       {editingNote && (
@@ -101,9 +79,9 @@ const Notes = () => {
       )}
 
       {loading ? (
-        <p>Loading notes...</p>
+        <p>Loading...</p>
       ) : notes.length === 0 ? (
-        <p>No notes yet. Create your first one!</p>
+        <p>No notes yet.</p>
       ) : (
         <div className="notes-list">
           {notes.map((note) => (

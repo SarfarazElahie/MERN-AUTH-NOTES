@@ -1,18 +1,11 @@
 import api from "./api";
 
-const bearer = (token) => ({
-  headers: { Authorization: `Bearer ${token}` },
-});
+export const createNote = (data) => api.post("/notes", data);
 
-export const createNote = (data, token) =>
-  api.post("/notes", data, bearer(token));
+export const getNotes = () => api.get("/notes");
 
-export const getNotes = (token) => api.get("/notes", bearer(token));
+export const getNote = (id) => api.get(`/notes/${id}`);
 
-export const getNote = (id, token) => api.get(`/notes/${id}`, bearer(token));
+export const updateNote = (id, data) => api.put(`/notes/${id}`, data);
 
-export const updateNote = (id, data, token) =>
-  api.put(`/notes/${id}`, data, bearer(token));
-
-export const deleteNote = (id, token) =>
-  api.delete(`/notes/${id}`, bearer(token));
+export const deleteNote = (id) => api.delete(`/notes/${id}`);
