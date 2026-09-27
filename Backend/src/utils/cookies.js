@@ -10,7 +10,7 @@ export const setRefreshTokenCookie = (res, token) => {
   res.cookie(REFRESH_COOKIE_NAME, token, {
     httpOnly: true,                          // JS can't read it (XSS-safe)
     secure: isProd,                          // HTTPS only in production
-    sameSite: isProd ? "strict" : "lax",     // CSRF protection
+    sameSite: isProd ? "none" : "lax",     // CSRF protection
     maxAge: REFRESH_COOKIE_MAX_AGE,
     path: "/",                               // available on all routes
   });
@@ -23,7 +23,7 @@ export const clearRefreshTokenCookie = (res) => {
   res.clearCookie(REFRESH_COOKIE_NAME, {
     httpOnly: true,
     secure: isProd,
-    sameSite: isProd ? "strict" : "lax",
+    sameSite: isProd ? "none" : "lax",
     path: "/",
   });
 };
