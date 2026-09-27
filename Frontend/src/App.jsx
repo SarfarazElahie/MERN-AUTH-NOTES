@@ -1,33 +1,35 @@
-import { useEffect, useState } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+import Login from "./pages/Login.jsx";
+import Register from "./pages/Register.jsx";
+import Notes from "./pages/Notes.jsx";
+import Profile from "./pages/Profile.jsx";
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
 
-function App() {
-  const [data, setData] = useState(null);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    fetch("http://localhost:5000/api/test")
-      .then((res) => res.json())
-      .then((json) => {
-        console.log("✅ Backend responded:", json);
-        setData(json);
-      })
-      .catch((err) => {
-        console.error("❌ Fetch failed:", err);
-        setError(err.message);
-      });
-  }, []);
-
+const App = () => {
   return (
-    <div style={{ padding: 20 }}>
-      <h1>Frontend ↔ Backend Test</h1>
-      {error && <p style={{ color: "red" }}>Error: {error}</p>}
-      {data ? (
-        <pre>{JSON.stringify(data, null, 2)}</pre>
-      ) : (
-        <p>Loading...</p>
-      )}
-    </div>
+    <Routes>
+      <Route path="/" element={<Navigate to="/notes" replace />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route
+        path="/notes"
+        element={
+          <ProtectedRoute>
+            <Notes />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        }
+      />
+      <Route path="*" element={<Navigate to="/notes" replace />} />
+    </Routes>
   );
-}
+};
 
 export default App;
